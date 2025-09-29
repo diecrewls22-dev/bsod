@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Support - Microsoft</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f3f2f1;
+            color: #323130;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: white;
+            border-bottom: 1px solid #e1dfdd;
+            padding: 12px 24px;
+        }
+        
+        .microsoft-logo {
+            font-size: 21px;
+            font-weight: 600;
+            color: #737373;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .support-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1.6px 3.6px 0 rgba(0,0,0,.132), 0 0.3px 0.9px 0 rgba(0,0,0,.108);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #323130;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #8a8886;
+            border-radius: 2px;
+            font-size: 14px;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+        
+        .btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 2px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #106ebe;
+        }
+        
+        .error-info {
+            background: #fff4ce;
+            border: 1px solid #ffaa44;
+            border-radius: 4px;
+            padding: 20px;
+            margin-top: 24px;
+            display: none;
+        }
+        
+        .solution-steps {
+            margin-top: 16px;
+        }
+        
+        .step {
+            margin-bottom: 12px;
+            padding-left: 20px;
+        }
+        
+        .success {
+            background: #dff6dd;
+            border-color: #107c10;
+        }
+        
+        .error-details {
+            font-family: 'Consolas', monospace;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 2px;
+            margin: 12px 0;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            display: inline-block;
+            color: #0078d4;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="microsoft-logo">Microsoft</div>
+    </div>
+    
+    <div class="container">
+        <div class="support-card">
+            <h1>Windows Stop Code Support</h1>
+            <p>Enter the error code from your Blue Screen to get specific troubleshooting steps.</p>
+            
+            <div class="form-group">
+                <label for="errorCodeInput">Error Code (e.g., 0x000000EF):</label>
+                <input type="text" id="errorCodeInput" placeholder="Enter the error code shown on the blue screen">
+            </div>
+            
+            <button class="btn" onclick="lookupError()">Get Help</button>
+            
+            <div id="errorResult" class="error-info">
+                <h3 id="errorTitle">Error Analysis</h3>
+                <div class="error-details">
+                    Stop Code: <span id="resultCode"></span><br>
+                    Error ID: <span id="resultId"></span><br>
+                    Collection ID: <span id="resultCollection"></span>
+                </div>
+                <div id="errorDescription"></div>
+                <div class="solution-steps" id="solutionSteps"></div>
+            </div>
+
+            <a href="/" class="back-link">← Back to BSOD Simulator</a>
+        </div>
+    </div>
+
+    <script>
+        const errorDatabase = {
+            '0x000000EF': {
+                code: 'CRITICAL_PROCESS_DIED',
+                title: 'Critical Process Died',
+                description: 'A critical system process died unexpectedly. This can be caused by system file corruption, driver issues, or hardware problems.',
+                solutions: [
+                    'Run System File Checker: Open Command Prompt as admin and run "sfc /scannow"',
+                    'Check for Windows updates in Settings > Update & Security',
+                    'Scan for malware using Windows Security',
+                    'Update your device drivers, especially chipset and storage controllers',
+                    'If recent hardware changes, try removing or replacing the hardware'
+                ]
+            },
+            '0x0000007E': {
+                code: 'SYSTEM_THREAD_EXCEPTION_NOT_HANDLED',
+                title: 'System Thread Exception Not Handled',
+                description: 'A system thread generated an exception that the error handler didn\'t catch. Often related to driver compatibility issues.',
+                solutions: [
+                    'Update your graphics card drivers from manufacturer website',
+                    'Check for BIOS/UEFI updates from your PC manufacturer',
+                    'Run Windows Memory Diagnostic tool',
+                    'Disable overclocking if enabled',
+                    'Perform clean boot to identify conflicting software'
+                ]
+            },
+            '0x0000000A': {
+                code: 'IRQL_NOT_LESS_OR_EQUAL',
+                title: 'IRQL Not Less or Equal',
+                description: 'A driver tried to access a memory address it shouldn\'t have access to. Commonly caused by faulty drivers.',
+                solutions: [
+                    'Update all device drivers, especially recent installations',
+                    'Check for hardware compatibility issues',
+                    'Run driver verifier to identify problematic drivers',
+                    'Test RAM with Windows Memory Diagnostic',
+                    'Check system temperatures and cooling'
+                ]
+            },
+            '0x00000117': {
+                code: 'VIDEO_TDR_FAILURE',
+                title: 'Video TDR Failure',
+                description: 'The graphics driver failed to respond in time. Typically related to graphics card or driver issues.',
+                solutions: [
+                    'Update graphics card drivers to
