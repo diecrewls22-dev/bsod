@@ -54,18 +54,14 @@
             font-family: 'Consolas', monospace;
         }
         
-        .qr-code {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: inline-block;
-        }
-        
         .support-link {
             color: #ffd700;
             text-decoration: none;
             font-weight: bold;
+        }
+        
+        .support-link:hover {
+            text-decoration: underline;
         }
         
         .progress {
@@ -89,8 +85,10 @@
             100% { width: 100%; }
         }
         
-        .hidden {
+        .restart-message {
             display: none;
+            margin-top: 20px;
+            font-style: italic;
         }
     </style>
 </head>
@@ -104,6 +102,7 @@
             <div class="progress">
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
+            <div class="restart-message" id="restart-message">Restarting your PC in 5 seconds...</div>
         </div>
         
         <div class="error-code">
@@ -118,45 +117,99 @@
             
             <div style="margin-top: 20px;">
                 <p>If you call a support person, give them this info:</p>
-                <p>Stop code: CRITICAL_PROCESS_DIED</p>
-                <p>Error ID: 0x000000EF</p>
+                <p>Stop code: <span id="stop-code-display">CRITICAL_PROCESS_DIED</span></p>
+                <p>Error ID: <span id="error-id-display">0x000000EF</span></p>
             </div>
         </div>
     </div>
 
     <script>
+        // Generate random error code first
+        const errorCodes = [
+            { code: 'SYSTEM_THREAD_EXCEPTION_NOT_HANDLED', id: '0x0000007E', collection: 'A1B2C3D4-5E6F-7G8H' },
+            { code: 'IRQL_NOT_LESS_OR_EQUAL', id: '0x0000000A', collection: 'D4E5F6A7-8B9C-0D1E' },
+            { code: 'VIDEO_TDR_FAILURE', id: '0x00000117', collection: 'F2G3H4I5-6J7K-8L9M' },
+            { code: 'PAGE_FAULT_IN_NONPAGED_AREA', id: '0x00000050', collection: 'B3C4D5E6-7F8G-9H0I' },
+            { code: 'CRITICAL_PROCESS_DIED', id: '0x000000EF', collection: 'BC432197-0A1B-4C8D' },
+            { code: 'KERNEL_SECURITY_CHECK_FAILURE', id: '0x00000139', collection: 'C5D6E7F8-9G0H-1I2J' },
+            { code: 'SYSTEM_SERVICE_EXCEPTION', id: '0x0000003B', collection: 'E7F8G9H0-1I2J-3K4L' }
+        ];
+        
+        const randomError = errorCodes[Math.floor(Math.random() * errorCodes.length)];
+        
+        // Update all error displays
+        document.getElementById('error-code').textContent = randomError.code;
+        document.getElementById('error-id').textContent = randomError.id;
+        document.getElementById('collection-id').textContent = randomError.collection;
+        document.getElementById('stop-code-display').textContent = randomError.code;
+        document.getElementById('error-id-display').textContent = randomError.id;
+        
+        // Update support link with error ID
+        const supportLink = document.getElementById('support-link');
+        supportLink.href = `support.html?error=${randomError.id}`;
+        supportLink.textContent = `https://support.microsoft.com/windows/error${randomError.id}`;
+
         // Simulate progress
         let progress = 0;
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
+        const restartMessage = document.getElementById('restart-message');
         
         const progressInterval = setInterval(() => {
             progress += Math.random() * 5;
             if (progress >= 100) {
                 progress = 100;
                 clearInterval(progressInterval);
+                progressText.textContent = '100% complete';
+                restartMessage.style.display = 'block';
+                
+                // Simulate restart countdown
+                setTimeout(() => {
+                    // Instead of actually restarting, just reset the progress
+                    progress = 0;
+                    progressBar.style.width = '0%';
+                    progressText.textContent = '0% complete';
+                    restartMessage.style.display = 'none';
+                    
+                    // Generate new random error
+                    const newError = errorCodes[Math.floor(Math.random() * errorCodes.length)];
+                    document.getElementById('error-code').textContent = newError.code;
+                    document.getElementById('error-id').textContent = newError.id;
+                    document.getElementById('collection-id').textContent = newError.collection;
+                    document.getElementById('stop-code-display').textContent = newError.code;
+                    document.getElementById('error-id-display').textContent = newError.id;
+                    
+                    // Update support link
+                    supportLink.href = `support.html?error=${newError.id}`;
+                    supportLink.textContent = `https://support.microsoft.com/windows/error${newError.id}`;
+                    
+                    // Restart progress simulation
+                    simulateProgress();
+                }, 5000);
+            } else {
+                progressBar.style.width = progress + '%';
+                progressText.textContent = Math.floor(progress) + '% complete';
             }
-            progressBar.style.width = progress + '%';
-            progressText.textContent = Math.floor(progress) + '% complete';
         }, 500);
-        
-        // Generate random error code
-        const errorCodes = [
-            { code: 'SYSTEM_THREAD_EXCEPTION_NOT_HANDLED', id: '0x0000007E', collection: 'A1B2C3D4-5E6F-7G8H' },
-            { code: 'IRQL_NOT_LESS_OR_EQUAL', id: '0x0000000A', collection: 'D4E5F6A7-8B9C-0D1E' },
-            { code: 'VIDEO_TDR_FAILURE', id: '0x00000117', collection: 'F2G3H4I5-6J7K-8L9M' },
-            { code: 'PAGE_FAULT_IN_NONPAGED_AREA', id: '0x00000050', collection: 'B3C4D5E6-7F8G-9H0I' }
-        ];
-        
-        const randomError = errorCodes[Math.floor(Math.random() * errorCodes.length)];
-        document.getElementById('error-code').textContent = randomError.code;
-        document.getElementById('error-id').textContent = randomError.id;
-        document.getElementById('collection-id').textContent = randomError.collection;
-        
-        // Update support link with error ID
-        const supportLink = document.getElementById('support-link');
-        supportLink.href = `support.html?error=${randomError.id}`;
-        supportLink.textContent = `https://support.microsoft.com/windows/error${randomError.id}`;
+
+        function simulateProgress() {
+            const newProgressInterval = setInterval(() => {
+                progress += Math.random() * 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(newProgressInterval);
+                    progressText.textContent = '100% complete';
+                    restartMessage.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        location.reload(); // Simple refresh to restart the simulation
+                    }, 3000);
+                } else {
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = Math.floor(progress) + '% complete';
+                }
+            }, 500);
+        }
         
         // Prevent right-click and other interactions
         document.addEventListener('contextmenu', function(e) {
@@ -165,8 +218,28 @@
         });
         
         document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey || e.altKey || e.key === 'F4') {
+            if (e.ctrlKey || e.altKey || e.key === 'F4' || e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
                 e.preventDefault();
+            }
+        });
+        
+        // Add some interactive elements
+        let clickCount = 0;
+        document.addEventListener('click', function() {
+            clickCount++;
+            if (clickCount >= 5) {
+                // Easter egg - force a different error
+                const forcedError = errorCodes[Math.floor(Math.random() * errorCodes.length)];
+                document.getElementById('error-code').textContent = forcedError.code;
+                document.getElementById('error-id').textContent = forcedError.id;
+                document.getElementById('collection-id').textContent = forcedError.collection;
+                document.getElementById('stop-code-display').textContent = forcedError.code;
+                document.getElementById('error-id-display').textContent = forcedError.id;
+                
+                supportLink.href = `support.html?error=${forcedError.id}`;
+                supportLink.textContent = `https://support.microsoft.com/windows/error${forcedError.id}`;
+                
+                clickCount = 0;
             }
         });
     </script>
