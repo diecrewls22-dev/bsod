@@ -81,6 +81,7 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
         
         .btn:hover {
@@ -103,6 +104,15 @@
         .step {
             margin-bottom: 12px;
             padding-left: 20px;
+            position: relative;
+        }
+        
+        .step:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #0078d4;
+            font-weight: bold;
         }
         
         .success {
@@ -116,8 +126,9 @@
             padding: 12px;
             border-radius: 2px;
             margin: 12px 0;
+            border-left: 4px solid #0078d4;
         }
-
+        
         .back-link {
             margin-top: 20px;
             display: inline-block;
@@ -127,6 +138,13 @@
         
         .back-link:hover {
             text-decoration: underline;
+        }
+        
+        .error-message {
+            color: #d13438;
+            margin-top: 8px;
+            font-size: 14px;
+            display: none;
         }
     </style>
 </head>
@@ -143,9 +161,10 @@
             <div class="form-group">
                 <label for="errorCodeInput">Error Code (e.g., 0x000000EF):</label>
                 <input type="text" id="errorCodeInput" placeholder="Enter the error code shown on the blue screen">
+                <div class="error-message" id="errorMessage">Please enter a valid error code</div>
             </div>
             
-            <button class="btn" onclick="lookupError()">Get Help</button>
+            <button class="btn" id="lookupButton">Get Help</button>
             
             <div id="errorResult" class="error-info">
                 <h3 id="errorTitle">Error Analysis</h3>
@@ -158,51 +177,184 @@
                 <div class="solution-steps" id="solutionSteps"></div>
             </div>
 
-            <a href="/" class="back-link">← Back to BSOD Simulator</a>
+            <a href="/bsod-simulator" class="back-link">← Back to BSOD Simulator</a>
         </div>
     </div>
 
     <script>
+        // Error database with comprehensive information
         const errorDatabase = {
             '0x000000EF': {
                 code: 'CRITICAL_PROCESS_DIED',
                 title: 'Critical Process Died',
                 description: 'A critical system process died unexpectedly. This can be caused by system file corruption, driver issues, or hardware problems.',
+                severity: 'High',
                 solutions: [
-                    'Run System File Checker: Open Command Prompt as admin and run "sfc /scannow"',
-                    'Check for Windows updates in Settings > Update & Security',
-                    'Scan for malware using Windows Security',
+                    'Run System File Checker: Open Command Prompt as administrator and run "sfc /scannow"',
+                    'Check for Windows updates in Settings > Update & Security > Windows Update',
+                    'Scan for malware using Windows Security or your preferred antivirus software',
                     'Update your device drivers, especially chipset and storage controllers',
-                    'If recent hardware changes, try removing or replacing the hardware'
+                    'If you recently made hardware changes, try removing or replacing the hardware',
+                    'Perform a system restore to a point before the issue started'
                 ]
             },
             '0x0000007E': {
                 code: 'SYSTEM_THREAD_EXCEPTION_NOT_HANDLED',
                 title: 'System Thread Exception Not Handled',
-                description: 'A system thread generated an exception that the error handler didn\'t catch. Often related to driver compatibility issues.',
+                description: 'A system thread generated an exception that the error handler didn\'t catch. Often related to driver compatibility issues or faulty hardware.',
+                severity: 'Medium',
                 solutions: [
-                    'Update your graphics card drivers from manufacturer website',
+                    'Update your graphics card drivers from the manufacturer\'s website',
                     'Check for BIOS/UEFI updates from your PC manufacturer',
-                    'Run Windows Memory Diagnostic tool',
-                    'Disable overclocking if enabled',
-                    'Perform clean boot to identify conflicting software'
+                    'Run Windows Memory Diagnostic tool to check for RAM issues',
+                    'Disable overclocking if enabled in your system settings',
+                    'Perform clean boot to identify conflicting software',
+                    'Check system event logs for additional error details'
                 ]
             },
             '0x0000000A': {
                 code: 'IRQL_NOT_LESS_OR_EQUAL',
                 title: 'IRQL Not Less or Equal',
-                description: 'A driver tried to access a memory address it shouldn\'t have access to. Commonly caused by faulty drivers.',
+                description: 'A driver tried to access a memory address it shouldn\'t have access to. Commonly caused by faulty drivers, especially recently installed ones.',
+                severity: 'High',
                 solutions: [
-                    'Update all device drivers, especially recent installations',
-                    'Check for hardware compatibility issues',
+                    'Update all device drivers, paying special attention to recent installations',
+                    'Check for hardware compatibility issues with your system',
                     'Run driver verifier to identify problematic drivers',
-                    'Test RAM with Windows Memory Diagnostic',
-                    'Check system temperatures and cooling'
+                    'Test RAM with Windows Memory Diagnostic tool',
+                    'Check system temperatures and ensure proper cooling',
+                    'Roll back recently installed drivers from Device Manager'
                 ]
             },
             '0x00000117': {
                 code: 'VIDEO_TDR_FAILURE',
                 title: 'Video TDR Failure',
-                description: 'The graphics driver failed to respond in time. Typically related to graphics card or driver issues.',
+                description: 'The graphics driver failed to respond in time. Typically related to graphics card issues, driver problems, or overheating.',
+                severity: 'Medium',
                 solutions: [
-                    'Update graphics card drivers to
+                    'Update graphics card drivers to the latest version',
+                    'Perform clean installation of graphics drivers using DDU (Display Driver Uninstaller)',
+                    'Reduce graphics card overclocking if applied',
+                    'Check graphics card temperatures and improve cooling if necessary',
+                    'Try using integrated graphics if available to isolate the issue',
+                    'Adjust graphics settings to reduce load on the GPU'
+                ]
+            },
+            '0x00000050': {
+                code: 'PAGE_FAULT_IN_NONPAGED_AREA',
+                title: 'Page Fault in Nonpaged Area',
+                description: 'Data that should be in memory wasn\'t found. Can be caused by faulty hardware, corrupt drivers, or system file corruption.',
+                severity: 'High',
+                solutions: [
+                    'Run Windows Memory Diagnostic tool to check for RAM issues',
+                    'Check hard drive for errors using chkdsk command',
+                    'Update device drivers, especially storage controllers',
+                    'Test with minimal hardware configuration',
+                    'Check system event logs for additional clues',
+                    'Run system file checker with "sfc /scannow"'
+                ]
+            }
+        };
+
+        // DOM elements
+        const errorCodeInput = document.getElementById('errorCodeInput');
+        const lookupButton = document.getElementById('lookupButton');
+        const errorResult = document.getElementById('errorResult');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Lookup error function
+        function lookupError() {
+            const input = errorCodeInput.value.trim().toUpperCase();
+            
+            // Validate input
+            if (!input) {
+                showError('Please enter an error code');
+                return;
+            }
+
+            // Check if error code exists in database
+            const errorData = errorDatabase[input];
+            
+            if (errorData) {
+                displayErrorInfo(errorData, input);
+                hideError();
+            } else {
+                showError('Error code not found. Please check the code and try again.');
+                errorResult.style.display = 'none';
+            }
+        }
+
+        // Display error information
+        function displayErrorInfo(errorData, errorId) {
+            document.getElementById('resultCode').textContent = errorData.code;
+            document.getElementById('resultId').textContent = errorId;
+            document.getElementById('resultCollection').textContent = generateCollectionId();
+            document.getElementById('errorTitle').textContent = errorData.title;
+            document.getElementById('errorDescription').textContent = errorData.description;
+            
+            // Build solutions HTML
+            const solutionsHtml = errorData.solutions.map((solution, index) => 
+                `<div class="step">${solution}</div>`
+            ).join('');
+            
+            document.getElementById('solutionSteps').innerHTML = solutionsHtml;
+            
+            // Show result
+            errorResult.style.display = 'block';
+            errorResult.className = 'error-info success';
+            
+            // Scroll to results
+            errorResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            errorCodeInput.focus();
+        }
+
+        // Hide error message
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        // Generate random collection ID
+        function generateCollectionId() {
+            const chars = '0123456789ABCDEF';
+            let result = '';
+            for (let i = 0; i < 12; i++) {
+                result += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return result.match(/.{1,4}/g).join('-');
+        }
+
+        // Event listeners
+        lookupButton.addEventListener('click', lookupError);
+
+        // Allow Enter key to trigger lookup
+        errorCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                lookupError();
+            }
+        });
+
+        // Clear error message when user starts typing
+        errorCodeInput.addEventListener('input', hideError);
+
+        // Check for URL parameters on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorParam = urlParams.get('error');
+            
+            if (errorParam) {
+                errorCodeInput.value = errorParam;
+                // Small delay to ensure DOM is fully ready
+                setTimeout(() => {
+                    lookupError();
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
